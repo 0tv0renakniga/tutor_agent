@@ -1,0 +1,117 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+
+\title{Lecture 3 --- The k-medoid clustering problem}
+\author{CSE 291: Unsupervised learning}
+\date{Spring 2008}
+
+\begin{document}
+
+\maketitle
+
+\section{Problem formulation}
+
+Let's go back to working in a metric space $(X, \rho)$. Here's the problem.
+
+\subsection*{k-MEDOID CLUSTERING}
+\textbf{Input:} Finite set $S \subseteq X$; integer $k$. \\
+\textbf{Output:} $T \subseteq S$ with $|T| = k$. \\
+\textbf{Goal:} Minimize cost$(T) = \sum_{x \in S} \rho(x, T)$.
+
+This is quite similar to k-means, except that $T$ is forced to be a subset of $S$ (rather than $X$) and the cost function involves distance rather than squared distance. It is known that this problem is hard to approximate within a factor better than $1+1/e$.
+
+\section{A linear programming relaxation}
+
+For convenience index the points in $S$ by $1, 2, \dots, n$, with interpoint distances $\rho(i, j)$, $1 \le i, j \le n$. Then the k-medoid problem is solved exactly by the following integer program.
+
+\begin{equation*}
+\min \sum_{i,j} x_{ij} \rho(i, j)
+\end{equation*}
+subject to:
+\begin{align*}
+\sum_j y_j &\le k \\
+\sum_j x_{ij} &= 1 \\
+x_{ij} &\le y_j \\
+x_{ij}, y_j &\in \{0,1\}
+\end{align*}
+
+where the variables $\{x_{ij}, y_j\}$ have the following interpretation.
+\begin{align*}
+y_j &= \mathbf{1}(\text{point } j \text{ is used as a medoid}) \\
+x_{ij} &= \mathbf{1}(j \text{ is the medoid serving point } i)
+\end{align*}
+
+An integer program cannot in general be solved efficiently, so we turn it into a linear program by relaxing the last two constraints:
+\begin{equation*}
+0 \le x_{ij}, y_j \le 1
+\end{equation*}
+
+The resulting LP can be solved in polynomial time.
+
+\subsection{Rounding the LP solution}
+
+Suppose the optimal solution to the k-medoid instance has cost OPT. Since this solution is feasible for the linear program, the optimal LP solution has some cost OPT$_{LP} <$ OPT. Say this solution consists of variables $\{x_{ij}, y_j\}$. The difficulty, of course, is that these values might be fractional (such as $y_1 = 0.2, y_2 = 0.5$, and so on). We'll show that it is possible to round this fractional solution into one that has $2k$ medoids and has cost at most 4OPT$_{LP}$.
+
+In the LP solution, point $i$ incurs a cost
+\begin{equation*}
+C_i = \sum_j x_{ij} \rho(i, j).
+\end{equation*}
+
+This might be spread out over several centers $j$: those with $x_{ij} > 0$. For instance, it might be the case that $x_{i1}, x_{i2}, x_{i3}, x_{i4} > 0$ (see figure below), and since $\sum_j x_{ij} = 1$, we can think of the $x_{ij}$'s as a probability distribution over centers for $i$. Under this distribution, $C_i$ is the expected distance of a center from $i$.
+
+The total cost is OPT$_{LP} = \sum_i C_i$. We will find a set of $2k$ medoids in $S$ such that each point $i$ is within distance at most $4C_i$ of these medoids. The total cost will then be at most 4OPT$_{LP}$.
+
+The hardest points to cover are those with the smallest values of $C_i$, so let's start by focusing on those. Pick the smallest $C_i$. If we include $i$ as a medoid, we can use it to cover any $i' \in S$ whose distance from $i$ is at most $4C_i$; denote the set of such points by $B(i, 4C_i)$. This is because $i$ has the smallest $C_i$ value, and thus $\rho(i, i') \le 4C_i \le 4C_{i'}$.
+
+But this is overly conservative. We can in fact use $i$ to cover any point $i'$ such that $B(i, 2C_i) \cap B(i', 2C_{i'}) \ne \emptyset$. To see this, notice that since the two balls intersect, they have some point $q$ in common, and thus $\rho(i, i') \le \rho(i, q) + \rho(i', q) \le 2C_i + 2C_{i'} \le 4C_{i'}$. Therefore, define the extended neighborhood of $i$ as follows.
+\begin{equation*}
+V_i = \{i' \in S : B(i, 2C_i) \cap B(i', 2C_{i'}) \ne \emptyset\}.
+\end{equation*}
+
+Now we can state the algorithm simply.
+\begin{verbatim}
+solve the LP and compute the values C_i
+T <- {}
+while S != {}:
+    pick the i in S with smallest C_i
+    T <- T U {i}
+    S <- S \\ V_i
+\end{verbatim}
+
+We will show the following.
+
+\textbf{Theorem 1.} cost(T) $\le$ 4OPT$_{LP}$ and $|T| < 2k$.
+
+\subsection{Analysis}
+
+First we'll show that cost(T) $\le$ 4OPT$_{LP}$. This is an immediate consequence of the following lemma.
+
+\textbf{Lemma 2.} Pick any $q \in S$, and suppose $i$ is the first point selected (to be in $T$) for which $q \in V_i$. Then: (a) $C_i \le C_q$ and (b) $\rho(q, i) \le 4C_q$.
+
+\textit{Proof.} At the moment when $i$ is selected, both $i$ and $q$ are available in $S$. Therefore $C_i \le C_q$. For (b), the condition $q \in V_i$ implies that there is some point $s$ in both $B(i, 2C_i)$ and $B(q, 2C_q)$. Thus
+\begin{equation*}
+\rho(q, i) \le \rho(i, s) + \rho(q, s) \le 2C_i + 2C_q \le 4C_q.
+\end{equation*}
+\qed
+
+Next we need to bound the size of $T$. The argument will go like this: we'll show that for each point $i$ selected to be in $T$, the neighborhood $B(i, 2C_i)$ contains at least "half a medoid": more precisely, the sum of $y_j$ for $j \in B(i, 2C_i)$ is at least $1/2$. However, these neighborhoods are all disjoint (for different $i \in T$) and the total sum of $y_j$ values is at most $k$. Therefore there can be at most $2k$ such points $i \in T$.
+
+\textbf{Lemma 3.} Pick any $i \in T$. Then
+\begin{equation*}
+\sum_{j \in B(i, 2C_i)} y_j \ge \sum_{j \in B(i, 2C_i)} x_{ij} \ge \frac{1}{2}
+\end{equation*}
+
+\textit{Proof.} The first inequality follows from the constraint $x_{ij} \le y_j$ in the LP. To see the second inequality, define a random variable $Z \in \mathbb{R}$ that takes value $\rho(i, j)$ with probability $x_{ij}$. As we saw above, $EZ = \sum_j x_{ij} \rho(i, j) = C_i$. By Markov's inequality,
+\begin{equation*}
+\sum_{j \notin B(i, 2C_i)} x_{ij} = P[Z \ge 2C_i] = 1 - P[Z < 2C_i] \ge \frac{1}{2} % [VERIFY] This seems to have a typo in the original pdf, it should be P[Z >= 2C_i] <= EZ / (2C_i) = C_i / (2C_i) = 1/2. So P[Z < 2C_i] >= 1/2
+\end{equation*}
+\qed
+
+The rest is immediate, since for any $i, i' \in T$, we know $B(i, 2C_i) \cap B(i', 2C_{i'}) = \emptyset$.
+
+\textbf{Problem 1.} Is there a linear or convex programming relaxation for the k-means problem in which the centers are not constrained to be data points?
+
+\end{document}

@@ -1,0 +1,29 @@
+## Technical Terms
+
+- Convex programming
+- Integer program
+- K-medoid clustering
+- Linear programming relaxation
+- Metric space
+- Neighborhood
+- Rounding
+
+## Proper Nouns
+
+- Markov's inequality
+
+## Acronyms
+
+- LP (Linear Program)
+- OPT (Optimal)
+
+## Key Concepts
+
+- Approximation algorithm
+- Cost function
+- Distance
+- Expected distance
+- Extended neighborhood
+- Fractional solution
+- Probability distribution
+- Squared distance

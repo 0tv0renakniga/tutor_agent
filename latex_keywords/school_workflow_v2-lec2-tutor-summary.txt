@@ -1,0 +1,59 @@
+'''**Technical Terms:**
+
+*   Approximation algorithm
+*   Average distortion
+*   Bias-variance decomposition
+*   Clustering
+*   Constant factor approximation
+*   Convergence
+*   Convex cells
+*   Cost function
+*   Data points
+*   Dimension
+*   Distortion
+*   EM clustering algorithm
+*   Euclidean space
+*   Farthest-first traversal
+*   Gaussians, mixtures of
+*   Hard clustering
+*   Initialization
+*   k-center problem
+*   k-means algorithm
+*   k-means cost function
+*   k-means++ initializer
+*   L2 norm
+*   Local optimum
+*   Local search heuristic
+*   Maximum distortion
+*   Mean
+*   NP-hard
+*   Optimal clustering
+*   Optimal solution
+*   Outliers
+*   Random vectors
+*   Representatives
+*   Single swap
+*   Soft clustering
+*   Squared L2 norm
+*   Suboptimal partitions
+*   Termination condition
+*   Uniform random draw
+*   Voronoi partition
+*   Voronoi regions
+
+**Key Concepts:**
+
+*   **k-means Clustering:** An algorithm for partitioning data into k clusters, where each data point belongs to the cluster with the nearest mean.
+*   **Cost Function:** A function that measures the quality of a clustering, typically by summing the squared distances from each data point to its cluster's mean.
+*   **Initialization:** The process of selecting the initial cluster centers, which can significantly impact the final clustering result.
+*   **k-means++:** An improved initialization method for k-means that aims to select initial centers that are far apart from each other.
+*   **Local Search:** A heuristic optimization method that iteratively makes small changes to a solution to improve it.
+*   **Approximation Algorithm:** An algorithm that finds an approximate solution to an optimization problem, often used when finding an exact solution is computationally expensive.
+*   **EM Algorithm:** A more general clustering algorithm than k-means that allows for soft clustering and non-spherical clusters.
+
+**Proper Nouns:**
+
+*   Arthur and Vassilvitskii
+*   Arya et al.
+
+''
