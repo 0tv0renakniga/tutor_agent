@@ -158,8 +158,21 @@ def generate_gemini_cmd(prompt,src_file):
 
     return gemini_cmd
 
-def change_to_common_parent_dir(inputs):
+
+def run_gemini(gemini_cmd):
     os.chdir('/home/scotty/')
+    try:
+        print(gemini_cmd)
+        result = subprocess.run(
+            gemini_cmd, shell=True, check=True, text=True, capture_output=True
+        )
+        print(result.stdout)
+    except subprocess.CalledProcessError:
+        print("pro model quota reach for today")
+        print("trying gemini-2.5-flash")
+        gemini_cmd = gemini_cmd.replace('--yolo ', '-y -m gemini-2.5-flash ')
+        print(gemini_cmd)
+        subprocess.run(gemini_cmd, shell=True)
 
 def main():
     # parse args passed
@@ -176,7 +189,6 @@ def main():
 
     # run gemini cmd
     print(gemini_cmd)
-    change_to_common_parent_dir(inputs)
-    subprocess.run(gemini_cmd, shell=True)
-
+    run_gemini(gemini_cmd)
+    
 main()
