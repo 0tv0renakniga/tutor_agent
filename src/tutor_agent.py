@@ -158,6 +158,18 @@ def generate_gemini_cmd(prompt,src_file):
 
     return gemini_cmd
 
+def pdf_to_txt(pdf_file):
+    '''
+    when 2.5 model limit reached you need to create txt file from pdf
+
+    need:
+      - pymupdf and tesseract(ocr functionality)
+      - setup venv for this project since extra libs needed
+        - add requirments.txt for pip
+        - add shell script to create venv and activate
+      - determine when ocr needed vs regular text extraction
+    '''
+    pass
 
 def run_gemini(gemini_cmd):
     os.chdir('/home/scotty/')
