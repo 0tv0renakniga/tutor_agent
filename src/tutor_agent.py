@@ -1,7 +1,7 @@
 import os
 import subprocess
 import argparse
-
+import fitz
 '''
 
 this script can help with the following tasks
@@ -150,12 +150,12 @@ def generate_gemini_cmd(prompt,src_file):
     '''
     generate instruction and cmd for gemini
     '''
-    gemini_instruction = "\"Please follow the prompt step by step in the xml "
+    gemini_instruction = "\'Please follow the prompt step by step in the xml "
     gemini_instruction += f"@{prompt} then follow the instructions outlined "
-    gemini_instruction += f"in the xml using @{src_file}\""
+    gemini_instruction += f"in the xml using @{src_file}\'"
 
     #gemini_cmd = f"gemini --yolo -p {gemini_instruction}"
-    gemini_cmd = f"gemini '-y -m gemini-2.5-flash {gemini_instruction}'"
+    gemini_cmd = f"gemini -y -m gemini-2.5-flash -p {gemini_instruction}"
     return gemini_cmd
 
 
@@ -170,45 +170,46 @@ def pdf_to_txt(pdf_file):
         - add shell script to create venv and activate
       - determine when ocr needed vs regular text extraction
     '''
-    doc = fitz.open(pdf_file)
+    #doc = fitz.open(pdf_file)
     full_text = []
 
-    print(f"Processing PDF file: {os.path.basename(pdf_path)}...")
-
-    for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
+    print(f"Processing PDF file: {os.path.basename(pdf_file)}...")
+    with fitz.open(pdf_file) as doc:
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
             
-        # First, try to extract text directly from the PDF page
-        text = page.get_text()
+            # First, try to extract text directly from the PDF page
+            text = page.get_text()
 
-        # If the direct extraction yields no text, it's likely a scanned PDF
-        if not text.strip():
-            print(f"Page {page_num + 1}: No direct text found. Using OCR...")
+            # If the direct extraction yields no text, it's likely a scanned PDF
+            if not text.strip():
+                print(f"Page {page_num + 1}: No direct text found. Using OCR...")
                 
-            # Render the page as a high-resolution image (Pixmap)
-            # A higher DPI can improve OCR accuracy
-            pix = page.get_pixmap(dpi=300)
+                # Render the page as a high-resolution image (Pixmap)
+                # A higher DPI can improve OCR accuracy
+                pix = page.get_pixmap(dpi=300)
                 
-            # Convert the Pixmap to a Pillow Image object
-            img = Image.open(io.BytesIO(pix.tobytes()))
+                # Convert the Pixmap to a Pillow Image object
+                img = Image.open(io.BytesIO(pix.tobytes()))
                 
-            # Use Tesseract to perform OCR on the image
-            ocr_text = pytesseract.image_to_string(img)
-            full_text.append(ocr_text)
-        else:
-            print(f"Page {page_num + 1}: Extracted text directly.")
-            full_text.append(text)
+                # Use Tesseract to perform OCR on the image
+                ocr_text = pytesseract.image_to_string(img)
+                full_text.append(ocr_text)
+            else:
+                print(f"Page {page_num + 1}: Extracted text directly.")
+                full_text.append(text)
 
-        doc.close()
+        #doc.close()
         
     # Join all page texts and return
     joined_txt = "\n".join(full_text)
-    print(f"joined all text found in {pdf}")
+    print(f"joined all text found in {pdf_file}")
     print(f"saving as {pdf_file.replace('.pdf','.txt')}")
-    pdf_file = pdf_file.replace('.pdf','.txt')
-    with open(pdf_file, "w", encoding="utf-8") as f:
-        f.write(joined_text)
-        print(f"Text successfully saved to '{output_path}'")
+    pdf_to_txt_file = pdf_file.replace('.pdf','.txt')
+    os.system(f"touch {pdf_to_txt_file}")
+    with open(pdf_to_txt_file, "w", encoding="utf-8") as f:
+        f.write(joined_txt)
+        print(f"Text successfully saved to '{pdf_to_txt_file}'")
 
 
 def run_gemini(gemini_cmd):
@@ -244,3 +245,5 @@ def main():
     run_gemini(gemini_cmd)
     
 main()
+#pdf_file = '/home/scotty/dsc_257/cse_examples/lectures/lec3.pdf'
+#pdf_to_txt(pdf_file)
