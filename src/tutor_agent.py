@@ -154,9 +154,10 @@ def generate_gemini_cmd(prompt,src_file):
     gemini_instruction += f"@{prompt} then follow the instructions outlined "
     gemini_instruction += f"in the xml using @{src_file}\""
 
-    gemini_cmd = f"gemini --yolo -p {gemini_instruction}"
-
+    #gemini_cmd = f"gemini --yolo -p {gemini_instruction}"
+    gemini_cmd = f"gemini '-y -m gemini-2.5-flash {gemini_instruction}'"
     return gemini_cmd
+
 
 def pdf_to_txt(pdf_file):
     '''
@@ -169,7 +170,46 @@ def pdf_to_txt(pdf_file):
         - add shell script to create venv and activate
       - determine when ocr needed vs regular text extraction
     '''
-    pass
+    doc = fitz.open(pdf_file)
+    full_text = []
+
+    print(f"Processing PDF file: {os.path.basename(pdf_path)}...")
+
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+            
+        # First, try to extract text directly from the PDF page
+        text = page.get_text()
+
+        # If the direct extraction yields no text, it's likely a scanned PDF
+        if not text.strip():
+            print(f"Page {page_num + 1}: No direct text found. Using OCR...")
+                
+            # Render the page as a high-resolution image (Pixmap)
+            # A higher DPI can improve OCR accuracy
+            pix = page.get_pixmap(dpi=300)
+                
+            # Convert the Pixmap to a Pillow Image object
+            img = Image.open(io.BytesIO(pix.tobytes()))
+                
+            # Use Tesseract to perform OCR on the image
+            ocr_text = pytesseract.image_to_string(img)
+            full_text.append(ocr_text)
+        else:
+            print(f"Page {page_num + 1}: Extracted text directly.")
+            full_text.append(text)
+
+        doc.close()
+        
+    # Join all page texts and return
+    joined_txt = "\n".join(full_text)
+    print(f"joined all text found in {pdf}")
+    print(f"saving as {pdf_file.replace('.pdf','.txt')}")
+    pdf_file = pdf_file.replace('.pdf','.txt')
+    with open(pdf_file, "w", encoding="utf-8") as f:
+        f.write(joined_text)
+        print(f"Text successfully saved to '{output_path}'")
+
 
 def run_gemini(gemini_cmd):
     os.chdir('/home/scotty/')
